@@ -37,6 +37,7 @@
 ## **_PRE-ICO FEATURES_**
 
 _Period 2 to 5 Aug_
+
 * Bonus of 300%
 * Total token to be sold _3% or_ **1653000**
 * Price of token _$_ **0.60**

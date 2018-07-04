@@ -22,7 +22,7 @@
 
 > **Fundraising : 55,100,000 _NTN_**
 
-> **Team Advisors Early Contributors : 7,600,000 *_NTN_***
+> **Team Advisors Early Contributors : 7,600,000 _NTN_**
 
 > **NATANEDU Foundation : 4,750,000 _NTN_**
 

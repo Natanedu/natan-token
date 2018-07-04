@@ -1,0 +1,17 @@
+{
+  "name": "natanedu",
+  "version": "1.0.0",
+  "description": "A crowdsale for Token Distribution",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vishal Dharmawat",
+  "license": "ISC",
+  "dependencies": {
+    "openzeppelin-solidity": "1.10.0"
+  }
+}

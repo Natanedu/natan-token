@@ -39,7 +39,7 @@
 _Period 2 to 5 Aug_
 
 * Bonus of 300%
-* Total token to be sold _3% or_ **1653000**
+* Total token to be sold _3% or_  **1653000 _NTN_**
 * Price of token _$_ **0.60**
 
 ## **_ICO Features_**

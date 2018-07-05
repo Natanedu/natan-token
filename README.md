@@ -18,6 +18,15 @@
 
 > **25000 _eth_**
 
+**Minimum Purchase :**
+
+> **2 _eth_**
+
+**Maximum Purchase :**
+
+> **50 _eth_**
+
+
 **Distributions**
 
 > **Fundraising : 55,100,000 _NTN_**

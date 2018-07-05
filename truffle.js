@@ -15,10 +15,10 @@
 module.exports = {
   networks: {
     development: {
-      host: "localhost",
+      host: '127.0.0.1',
       port: 8545,
       network_id: "*", // Match any network id
-      from:"0xc803D536FFb1eC9B71548352784FAAeCF95929a9" 
+      from:"0xd04a4314b46ac2e2f27fda6efc69da629b5621d1" 
     },
     rinkeby: {
       host: "192.168.0.104", // Connect to geth on the specified

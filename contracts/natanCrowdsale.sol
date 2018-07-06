@@ -1,15 +1,27 @@
 pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol';
+
 import './natanEduConstant.sol';
-import './natanEduToken.sol'
+import './natanEduToken.sol';
 
 
 contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
 
-    function natanCrowdsale(uint startTime, uint endTime, uint _hardCapTokens)
-            FinalizableCrowdsale(startTime, endTime, _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER, COLD_WALLET) {
+    natanEduToken public token;
+    address public wallet;
+    uint public soldTokens;
+    uint public hardcap;
 
+    event TokenPurchase(address indexed purchaser, address indexed beneficiary,  uint amount);
+
+
+    constructor(uint openingTime, uint endTime, address _wallet)
+            TimedCrowdsale(openingTime, endTime) {
+        
+        require(endTime >= openingTime);
+        wallet = _wallet;
+        token = createTokenContract();
         token.mint(TEAM_ADDRESS, TEAM_TOKENS);
         token.mint(BONUS_ADDRESS, STUD_BONUS_TOKENS);
         token.mint(PREICO_ADDRESS, PREICO_TOKENS);
@@ -19,14 +31,14 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
         token.mint(LEGALISSUES_ADDRESS, LEGALISSUES_TOKENS);
 
         natanEduToken(token).addExcluded(TEAM_ADDRESS);
-        natanEduToken(token).addExcluded(BOUNTY_ADDRESS);
+        natanEduToken(token).addExcluded(BONUS_ADDRESS);
         natanEduToken(token).addExcluded(PREICO_ADDRESS);
     }
 
     /**
      * @dev override token creation to integrate with natanEduToken token.
      */
-    function createTokenContract() internal returns (MintableToken) {
+    function createTokenContract() internal returns (natanEduToken) {
         return new natanEduToken();
     }
 
@@ -34,68 +46,68 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
     // @Override
     function getRate() public view returns (uint256) {
         
-        if (now < (startTime.add(3 days)) ) 
+        if (now < (openingTime.add(3 days)) ) 
         {
             return 10000*TOKEN_DECIMAL_MULTIPLIER;
         }
         
-        if (now < (startTime.add(7 days))) 
+        else if (now < (openingTime.add(7 days))) 
         {
             return 5000*TOKEN_DECIMAL_MULTIPLIER;
         }
 
-        if (now < (startTime.add(13 days))) 
+        else if (now < (openingTime.add(13 days))) 
         {
             return 3000*TOKEN_DECIMAL_MULTIPLIER;
         }
 
-        if (now < (startTime.add(31 days))) 
+        else if (now < (openingTime.add(31 days))) 
         {
             return 1000*TOKEN_DECIMAL_MULTIPLIER;
         }
-
-        return rate;
     }
 
 
-    /**
-     * @dev Admin can set new rate provider.
-     * @param _rateProviderAddress New rate provider.
-     */
-    function setRateProvider(address _rateProviderAddress) onlyOwner {
-        require(_rateProviderAddress != 0);
-        rateProvider = RateProviderI(_rateProviderAddress);
+     // low level token purchase function
+    function buyTokens(address beneficiary, uint amount) public {
+        require(beneficiary != 0x0);
+        // total minted tokens
+        uint totalSupply = token.totalSupply();
+        // calculate token amount to be created
+        uint tokens = getRate();
+        // actual token minting rate (with considering bonuses and discounts)
+        require(validPurchase(tokens, totalSupply));
+        soldTokens = soldTokens.add(tokens);
+        token.mint(beneficiary, tokens);
+        TokenPurchase(msg.sender, beneficiary,  tokens);
     }
-
     /**
      * @dev Admin can move end time.
      * @param _endTime New end time.
      */
-    function setEndTime(uint _endTime) onlyOwner notFinalized {
-        require(_endTime > startTime);
-        endTime = uint32(_endTime);
+    function setEndTime(uint _endTime) onlyOwner  {
+        require(_endTime > openingTime);
+        closingTime = uint32(_endTime);
     }
 
-    function setHardCap(uint _hardCapTokens) onlyOwner notFinalized {
-        require(_hardCapTokens * TOKEN_DECIMAL_MULTIPLIER > hardCap);
-        hardCap = _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER;
+
+     function setopeningTime(uint _openingTime) onlyOwner  {
+        require(_openingTime < closingTime);
+        openingTime = uint32(_openingTime);
     }
 
-    function setStartTime(uint _startTime) onlyOwner notFinalized {
-        require(_startTime < endTime);
-        startTime = uint32(_startTime);
-    }
+    // function setHardCap(uint _hardCapTokens) onlyOwner  {
+    //     require(_hardCapTokens * TOKEN_DECIMAL_MULTIPLIER > HARD_CAP_TOKENS);
+    //     HARD_CAP_TOKENS = _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER;
+    // }
 
-    function addExcluded(address _address) onlyOwner notFinalized {
+   
+
+    function addExcluded(address _address) onlyOwner  {
        natanEduToken(token).addExcluded(_address);
     }
 
-    function validPurchase(uint _amountWei, uint _actualRate, uint _totalSupply) internal constant returns (bool) {
-        if (_amountWei < MINIMAL_PURCHASE) {
-            return false;
-        }
-        return super.validPurchase(_amountWei, _actualRate, _totalSupply);
-    }
+
 
     function finalization() internal {
         super.finalization();
@@ -108,15 +120,24 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
         return isFinalized;
     }
 
-    function getStartTime() external constant returns (uint starttime) {
-        return startTime;
+    function getopeningTime() external constant returns (uint openingTime) {
+        return openingTime;
     }
 
     function getEndTime() external constant returns (uint endtime) {
-        return endTime;
+        return closingTime;
     }
 
     function buynatanEduTokens(address beneficiary,uint amountWei) onlyOwner {
         buyTokens(beneficiary, amountWei);
+    }
+
+    function validPurchase(uint tokenamount, uint _totalSupply) internal constant returns (bool) {
+        require(tokenamount >=  MINIMAL_PURCHASE );
+        require(tokenamount <= MAXIMUM_PURCHASE);
+        bool withinPeriod = now >= openingTime && now <= closingTime;
+        uint checkamount = tokenamount.add(_totalSupply);
+        bool hardCapNotReached = checkamount <= HARD_CAP_TOKENS;
+        return withinPeriod  && hardCapNotReached;
     }
 }

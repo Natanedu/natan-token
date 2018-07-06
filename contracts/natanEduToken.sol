@@ -10,7 +10,10 @@ contract natanEduToken is  natanEduConstant, MintableToken {
      * @dev Pause token transfer. After successfully finished crowdsale it becomes true.
      */
     bool public paused = false;
-  
+    /**
+     * @dev Accounts who can transfer token even if paused. Works only during crowdsale.
+     */
+    mapping(address => bool) excluded;
 
     
     function name() constant public returns (string _name) {
@@ -29,14 +32,18 @@ contract natanEduToken is  natanEduConstant, MintableToken {
         paused = true;
         finishMinting();
     }
-    
+
+    function addExcluded(address _toExclude) onlyOwner {
+        excluded[_toExclude] = true;
+    }
+
     function transferFrom(address _from, address _to, uint256 _value) returns (bool) {
-        require(!paused );
+        require(!paused || excluded[_from]);
         return super.transferFrom(_from, _to, _value);
     }
 
     function transfer(address _to, uint256 _value) returns (bool) {
-        require(!paused );
+        require(!paused || excluded[msg.sender]);
         return super.transfer(_to, _value);
     }
 

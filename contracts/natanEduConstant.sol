@@ -14,9 +14,10 @@ contract natanEduConstant {
     uint constant COMMUNITY_TOKENS = 3800000 * TOKEN_DECIMAL_MULTIPLIER;
     uint constant LEGALISSUES_TOKENS = 4750000 * TOKEN_DECIMAL_MULTIPLIER;
 
-    uint constant MINIMAL_PURCHASE = 2 ether;
-    uint constant MAXIMUM_PURCHASE = 50 ether;
+    uint constant MINIMAL_PURCHASE = 100 * TOKEN_DECIMAL_MULTIPLIER; //100 NTN 
+    uint constant MAXIMUM_PURCHASE = 500 * TOKEN_DECIMAL_MULTIPLIER; //500 NTN MAX 
 
+    // wallets address for 52% of NTN allocation
     address constant TEAM_ADDRESS = 0xaa91976bedc33ac661fa2d25b22601d823ac2582;
     address constant BONUS_ADDRESS = 0xc803D536FFb1eC9B71548352784FAAeCF95929a9;
     address constant PREICO_ADDRESS = 0x7b1593b7ee429a0bc1aa86a6c92888cf5304f97c;

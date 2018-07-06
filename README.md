@@ -49,17 +49,17 @@ _Period 2 to 5 Aug_
 
 * Bonus of 300%
 * Total token to be sold _3% or_  **1653000 _NTN_**
-* Price of token _$_ **0.60**
+* Price of token _1 ETH =_ **10000 NTN**
 
 ## **_ICO Features_**
 
 1.  Period 8 to 12 August
 
-    - Price of Token _$_ **0.70**
+    - Price of Token _$_ **5000 NTN**
 
 2.  Period 15 to 18 August
 
-    - Price of Token _$_ **0.80**
+    - Price of Token _$_ **3000 NTN**
 
-3.  Period 2 july to 5 September
-    - Price of Token _$_ **1.00**
+3.  Period 2 September to 5 September
+    - Price of Token _$_ **1000 NTN**

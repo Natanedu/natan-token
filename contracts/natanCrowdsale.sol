@@ -6,11 +6,13 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./natanEduConstant.sol";
 import "./natanEduToken.sol";
+import "./safeDeposit.sol";
 
 
 contract natanCrowdsale is natanEduConstant, Ownable {
     using SafeMath for uint256;
     natanEduToken public token;
+    safeDeposit public Deposit;
     address public wallet;
     uint public soldTokens;
     uint public hardcap;
@@ -24,11 +26,11 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     /**
    * @dev Reverts if not in crowdsale time range.
    */
-   modifier onlyWhileOpen {
+    modifier onlyWhileOpen {
 
-    require(block.timestamp >= openingTime && block.timestamp <= closingTime);
-    _;
-  }
+        require(block.timestamp >= openingTime && block.timestamp <= closingTime);
+        _;
+    }
 
     constructor(uint _openingTime, uint _endTime, address _wallet)
             Ownable() {
@@ -106,7 +108,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         // calculate token amount to be created
         uint tokens = _getTokenAmount(_weiamount);
         // actual token minting rate (with considering bonuses and discounts)
-        require(validPurchase(tokens, totalSupply));
+        require(validPurchase(beneficiary, tokens, totalSupply));
         soldTokens = soldTokens.add(tokens);
         token.mint(beneficiary, tokens);
         TokenPurchase(msg.sender, beneficiary,  tokens);
@@ -138,7 +140,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     //     return isFinalized;
     // }
 
-    function getopeningTime() external constant returns (uint openingTime) {
+    function getopeningTime() external constant returns (uint ) {
         return openingTime;
     }
 
@@ -146,11 +148,13 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         return closingTime;
     }
 
-    function validPurchase(uint tokenamount, uint _totalSupply) internal constant returns (bool) {
-        require(tokenamount >=  MINIMAL_PURCHASE );
+    function validPurchase(address beneficiary, uint tokenamount, uint _totalSupply) internal view returns (bool) {
+        require(tokenamount >=  MINIMAL_PURCHASE);
         require(tokenamount <= MAXIMUM_PURCHASE);
+        uint tokenBalance = token.balanceOf(beneficiary);
+        require(tokenBalance.add(tokenamount) <= MAXIMUM_PURCHASE);
         uint checkamount = tokenamount.add(_totalSupply);
-        bool hardCapNotReached = checkamount <= HARD_CAP_TOKENS;
+        bool hardCapNotReached = checkamount <= FUND_RAISING_TOKENS;
         return hardCapNotReached;
     }
 
@@ -179,7 +183,8 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         if(totalMinted <= FUND_RAISING_TOKENS)
         {
             uint amount_to_mint = FUND_RAISING_TOKENS.sub(totalMinted);
-            token.mint (COLD_WALLET,amount_to_mint); // this need to be updated with other logic if smart contract has to be done
+            Deposit = new safeDeposit();
+            token.mint (Deposit,amount_to_mint); // this need to be updated with other logic if smart contract has to be done
         }
         token.finishMinting();
         natanEduToken(token).crowdsaleFinish();

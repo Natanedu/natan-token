@@ -46,27 +46,30 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
     // @Override
     function getRate() public view returns (uint256) {
         
-        if (now < (openingTime.add(3 days)) ) 
+        if (now <= (openingTime.add(3 days)) ) 
         {
             return 10000*TOKEN_DECIMAL_MULTIPLIER;
         }
         
-        else if (now < (openingTime.add(7 days))) 
+        else if (now <= (openingTime.add(10 days))) 
         {
             return 5000*TOKEN_DECIMAL_MULTIPLIER;
         }
 
-        else if (now < (openingTime.add(13 days))) 
+        else if (now <= (openingTime.add(16 days))) 
         {
             return 3000*TOKEN_DECIMAL_MULTIPLIER;
         }
 
-        else if (now < (openingTime.add(31 days))) 
+        else if (now <= (openingTime.add(34 days))) 
         {
             return 1000*TOKEN_DECIMAL_MULTIPLIER;
         }
     }
 
+
+
+   
 
      // low level token purchase function
     function buyTokens(address beneficiary, uint amount) public {

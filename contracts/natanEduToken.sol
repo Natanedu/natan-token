@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import 'openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol';
-import './natanEduConstant.sol';
+import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
+import "./natanEduConstant.sol";
 
 
 contract natanEduToken is  natanEduConstant, MintableToken {
@@ -45,6 +45,14 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     function transfer(address _to, uint256 _value) returns (bool) {
         require(!paused || excluded[msg.sender]);
         return super.transfer(_to, _value);
+    }
+
+     /**
+   * @dev Function to mint tokens
+   */
+    function mint(address _to,uint256 _amount) public returns (bool)
+    {
+        super.mint(_to, _amount);
     }
 
 }

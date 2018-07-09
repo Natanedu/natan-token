@@ -1,26 +1,44 @@
 pragma solidity ^0.4.23;
 
-import 'openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol';
+// import 'openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol';
 
-import './natanEduConstant.sol';
-import './natanEduToken.sol';
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./natanEduConstant.sol";
+import "./natanEduToken.sol";
 
 
-contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
-
+contract natanCrowdsale is natanEduConstant, Ownable {
+    using SafeMath for uint256;
     natanEduToken public token;
     address public wallet;
     uint public soldTokens;
     uint public hardcap;
+    uint public openingTime;
+    uint public closingTime;
+    bool public isFinalized = false;
 
     event TokenPurchase(address indexed purchaser, address indexed beneficiary,  uint amount);
+    event Finalized();
 
+    /**
+   * @dev Reverts if not in crowdsale time range.
+   */
+   modifier onlyWhileOpen {
 
-    constructor(uint openingTime, uint endTime, address _wallet)
-            TimedCrowdsale(openingTime, endTime) {
+    require(block.timestamp >= openingTime && block.timestamp <= closingTime);
+    _;
+  }
+
+    constructor(uint _openingTime, uint _endTime, address _wallet)
+            Ownable() {
         
-        require(endTime >= openingTime);
+        require(_endTime >= _openingTime);
+        require(_openingTime != 0);
+        require(_endTime != 0);
         wallet = _wallet;
+        openingTime = _openingTime;
+        closingTime = _endTime;
         token = createTokenContract();
         token.mint(TEAM_ADDRESS, TEAM_TOKENS);
         token.mint(BONUS_ADDRESS, STUD_BONUS_TOKENS);
@@ -67,17 +85,26 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
         }
     }
 
+     /**
+   * @dev Override to extend the way in which ether is converted to tokens.
+   * @param _weiAmount Value in wei to be converted into tokens
+   * @return Number of tokens that can be purchased with the specified _weiAmount
+   */
+  function _getTokenAmount(uint256 _weiAmount)
+    internal view returns (uint256)
+  {
+    uint rate = getRate();
+    return _weiAmount.mul(rate);
+  }
 
-
-   
 
      // low level token purchase function
-    function buyTokens(address beneficiary, uint amount) public {
+    function buyTokens(address beneficiary, uint _weiamount) public onlyWhileOpen {
         require(beneficiary != 0x0);
         // total minted tokens
         uint totalSupply = token.totalSupply();
         // calculate token amount to be created
-        uint tokens = getRate();
+        uint tokens = _getTokenAmount(_weiamount);
         // actual token minting rate (with considering bonuses and discounts)
         require(validPurchase(tokens, totalSupply));
         soldTokens = soldTokens.add(tokens);
@@ -104,24 +131,12 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
     //     HARD_CAP_TOKENS = _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER;
     // }
 
-   
-
     function addExcluded(address _address) onlyOwner  {
        natanEduToken(token).addExcluded(_address);
     }
-
-
-
-    function finalization() internal {
-        super.finalization();
-        token.finishMinting();
-        natanEduToken(token).crowdsaleFinish();
-        token.transferOwnership(owner);
-    }
-
-    function isSaleFinished() external returns (bool status){
-        return isFinalized;
-    }
+    // function isSaleFinished() external returns (bool status){
+    //     return isFinalized;
+    // }
 
     function getopeningTime() external constant returns (uint openingTime) {
         return openingTime;
@@ -131,16 +146,45 @@ contract natanCrowdsale is natanEduConstant, FinalizableCrowdsale {
         return closingTime;
     }
 
-    function buynatanEduTokens(address beneficiary,uint amountWei) onlyOwner {
-        buyTokens(beneficiary, amountWei);
-    }
-
     function validPurchase(uint tokenamount, uint _totalSupply) internal constant returns (bool) {
         require(tokenamount >=  MINIMAL_PURCHASE );
         require(tokenamount <= MAXIMUM_PURCHASE);
-        bool withinPeriod = now >= openingTime && now <= closingTime;
         uint checkamount = tokenamount.add(_totalSupply);
         bool hardCapNotReached = checkamount <= HARD_CAP_TOKENS;
-        return withinPeriod  && hardCapNotReached;
+        return hardCapNotReached;
     }
+
+    // Finalize function for finalizing the crowdsale
+    function finalize() onlyOwner public {
+        require(!isFinalized);
+        require(hasClosed());
+
+        finalization();
+        emit Finalized();
+
+        isFinalized = true;
+    }
+
+    /**
+   * @dev Checks whether the period in which the crowdsale is open has already elapsed.
+   * @return Whether crowdsale period has elapsed
+   */
+    function hasClosed() public view returns (bool) {
+        return block.timestamp > closingTime;
+    }
+
+    function finalization() internal {
+        // super.finalization();
+        uint totalMinted = token.totalSupply();
+        if(totalMinted <= FUND_RAISING_TOKENS)
+        {
+            uint amount_to_mint = FUND_RAISING_TOKENS.sub(totalMinted);
+            token.mint (COLD_WALLET,amount_to_mint); // this need to be updated with other logic if smart contract has to be done
+        }
+        token.finishMinting();
+        natanEduToken(token).crowdsaleFinish();
+    }
+
+
+
 }

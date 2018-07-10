@@ -195,8 +195,8 @@ contract natanCrowdsale is natanEduConstant, Ownable {
 
     // This function will be used to withdraw 1/3  of the remaining token per year
     function withdrawFromStorage() public  returns(bool) {
-        // require(correctTimeFrame());
-        // require(count == 1 || count == 2 || count == 3);
+        require(correctTimeFrame());
+        require(count == 1 || count == 2 || count == 3);
         token.withdrawFromStorage(1);
         return true;
     }

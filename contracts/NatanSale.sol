@@ -113,27 +113,22 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         uint rate = getRate();
         require(rate != 0);
         if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER && soldTokens < PREICO_TOKENS){
-            // total minted tokens
-            uint totalSupply = token.totalSupply();
+            
             // calculate token amount to be created
-            uint tokens = _getTokenAmount(_weiamount);
-            // actual token minting rate (with considering bonuses and discounts)
-            require(validPurchase(beneficiary, tokens, totalSupply, preico));
-            soldTokens = soldTokens.add(tokens);
+            uint pretokens = _getTokenAmount(_weiamount);
+            require(validPurchase(beneficiary, pretokens,  preico));
             token.mint(beneficiary, tokens);
-            TokenPurchase(msg.sender, beneficiary,  tokens);
+            soldTokens = soldTokens.add(pretokens);
+            TokenPurchase(msg.sender, beneficiary,  pretokens);
 
         }
         else {
             preico = false;
-            // total minted tokens
-            uint totalSupply = token.totalSupply();
             // calculate token amount to be created
             uint tokens = _getTokenAmount(_weiamount);
-            // actual token minting rate (with considering bonuses and discounts)
-            require(validPurchase(beneficiary, tokens, totalSupply, preico));
-            soldTokens = soldTokens.add(tokens);
+            require(validPurchase(beneficiary, tokens, preico));
             token.mint(beneficiary, tokens);
+            soldTokens = soldTokens.add(tokens);
             emit TokenPurchase(msg.sender, beneficiary,  tokens);
         }
     }
@@ -173,18 +168,18 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         return closingTime;
     }
 
-    function validPurchase(address beneficiary, uint tokenamount, uint _totalSupply, bool preico) internal view returns (bool) {
+    function validPurchase(address beneficiary, uint tokenamount, bool preico) internal view returns (bool) {
         require(tokenamount >= MINIMAL_PURCHASE);
         require(tokenamount <= MAXIMUM_PURCHASE);
         uint tokenBalance = token.balanceOf(beneficiary);
+        require(tokenBalance.add(tokenamount) <= MAXIMUM_PURCHASE);
+
         if(preico){
-            require(tokenBalance.add(tokenamount) <= MAXIMUM_PURCHASE);
             bool softCapNotReached = tokenamount.add(soldTokens) <= PREICO_TOKENS;
             return softCapNotReached;
         }
         else{
-            uint checkamount = tokenamount.add(soldTokens);
-            bool hardCapNotReached = checkamount <= FUND_RAISING_TOKENS;
+            bool hardCapNotReached = tokenamount.add(soldTokens) <= FUND_RAISING_TOKENS;
             return hardCapNotReached;
         }
     }

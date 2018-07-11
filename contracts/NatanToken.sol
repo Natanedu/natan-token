@@ -39,11 +39,11 @@ contract natanEduToken is  natanEduConstant, MintableToken {
         return TOKEN_NAME;
     }
 
-    function symbol() constant public returns (string _symbol) {
+    function symbol() pure public returns (string _symbol) {
         return TOKEN_SYMBOL;
     }
 
-    function decimals() constant public returns (uint _decimals) {
+    function decimals() pure public returns (uint _decimals) {
         return TOKEN_DECIMALS;
     }
 

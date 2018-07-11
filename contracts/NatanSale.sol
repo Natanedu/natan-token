@@ -69,25 +69,26 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     // @Override
     function getRate() public view returns (uint256) {
         
-        if (now <= (openingTime.add(3 days)) ) 
+        if (now <= (openingTime.add(4 days)) ) 
         {
             return 10000*TOKEN_DECIMAL_MULTIPLIER;
         }
         
-        else if (now <= (openingTime.add(10 days))) 
+        else if (now >= (openingTime.add(7 days)) && now <= (openingTime.add(11 days))) 
         {
             return 5000*TOKEN_DECIMAL_MULTIPLIER;
         }
 
-        else if (now <= (openingTime.add(16 days))) 
+        else if (now >= (openingTime.add(14 days)) && now <= (openingTime.add(17 days))) 
         {
             return 3000*TOKEN_DECIMAL_MULTIPLIER;
         }
 
-        else if (now <= (openingTime.add(34 days))) 
+        else if (now >= (openingTime.add(32 days)) && now <= (openingTime.add(35 days))) 
         {
             return 1000*TOKEN_DECIMAL_MULTIPLIER;
         }
+        else return 500*TOKEN_DECIMAL_MULTIPLIER;
     }
 
      /**
@@ -107,8 +108,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     function buyTokens(address beneficiary, uint _weiamount) public onlyWhileOpen {
         require(beneficiary != 0x0);
         uint rate = getRate();
-        if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER){
-            soldTokens <= PREICO_TOKENS;
+        if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER && soldTokens <= PREICO_TOKENS){
             // total minted tokens
             uint totalSupply = token.totalSupply();
             // calculate token amount to be created

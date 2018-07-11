@@ -34,7 +34,7 @@ contract natanEduToken is  natanEduConstant, MintableToken {
 
 
     
-    function name() constant public returns (string _name) {
+    function name() public view returns (string _name) {
         emit CheckMSGSender(sale_Add);
         return TOKEN_NAME;
     }

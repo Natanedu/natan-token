@@ -100,6 +100,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     internal view returns (uint256)
     {
         uint rate = getRate();
+        require(rate != 0);
         return _weiAmount.mul(rate);
     }
 
@@ -108,6 +109,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     function buyTokens(address beneficiary, uint _weiamount) public onlyWhileOpen {
         require(beneficiary != 0x0);
         uint rate = getRate();
+        require(rate != 0);
         if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER && soldTokens <= PREICO_TOKENS){
             // total minted tokens
             uint totalSupply = token.totalSupply();

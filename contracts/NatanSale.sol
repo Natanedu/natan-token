@@ -20,6 +20,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     uint public closingTime;
     bool public isFinalized = false;
     uint public count ;
+    bool preico;
 
     event TokenPurchase(address indexed purchaser, address indexed beneficiary,  uint amount);
     event Finalized();
@@ -43,6 +44,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         openingTime = _openingTime;
         closingTime = _endTime;
         count = 0;
+        preico = true;
         token = createTokenContract();
         token.mint(TEAM_ADDRESS, TEAM_TOKENS);
         token.mint(BONUS_ADDRESS, STUD_BONUS_TOKENS);
@@ -110,25 +112,26 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         require(beneficiary != 0x0);
         uint rate = getRate();
         require(rate != 0);
-        if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER && soldTokens <= PREICO_TOKENS){
+        if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER && soldTokens < PREICO_TOKENS){
             // total minted tokens
             uint totalSupply = token.totalSupply();
             // calculate token amount to be created
             uint tokens = _getTokenAmount(_weiamount);
             // actual token minting rate (with considering bonuses and discounts)
-            require(validPurchase(beneficiary, tokens, totalSupply));
+            require(validPurchase(beneficiary, tokens, totalSupply, preico));
             soldTokens = soldTokens.add(tokens);
             token.mint(beneficiary, tokens);
             TokenPurchase(msg.sender, beneficiary,  tokens);
 
         }
         else {
+            preico = false;
             // total minted tokens
             uint totalSupply = token.totalSupply();
             // calculate token amount to be created
             uint tokens = _getTokenAmount(_weiamount);
             // actual token minting rate (with considering bonuses and discounts)
-            require(validPurchase(beneficiary, tokens, totalSupply));
+            require(validPurchase(beneficiary, tokens, totalSupply, preico));
             soldTokens = soldTokens.add(tokens);
             token.mint(beneficiary, tokens);
             emit TokenPurchase(msg.sender, beneficiary,  tokens);
@@ -170,14 +173,20 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         return closingTime;
     }
 
-    function validPurchase(address beneficiary, uint tokenamount, uint _totalSupply) internal view returns (bool) {
+    function validPurchase(address beneficiary, uint tokenamount, uint _totalSupply, bool preico) internal view returns (bool) {
         require(tokenamount >= MINIMAL_PURCHASE);
         require(tokenamount <= MAXIMUM_PURCHASE);
         uint tokenBalance = token.balanceOf(beneficiary);
-        require(tokenBalance.add(tokenamount) <= MAXIMUM_PURCHASE);
-        uint checkamount = tokenamount.add(_totalSupply);
-        bool hardCapNotReached = checkamount <= FUND_RAISING_TOKENS;
-        return hardCapNotReached;
+        if(preico){
+            require(tokenBalance.add(tokenamount) <= MAXIMUM_PURCHASE);
+            bool softCapNotReached = tokenamount.add(soldTokens) <= PREICO_TOKENS;
+            return softCapNotReached;
+        }
+        else{
+            uint checkamount = tokenamount.add(soldTokens);
+            bool hardCapNotReached = checkamount <= FUND_RAISING_TOKENS;
+            return hardCapNotReached;
+        }
     }
 
     // Finalize function for finalizing the crowdsale
@@ -201,10 +210,9 @@ contract natanCrowdsale is natanEduConstant, Ownable {
 
     function finalization() internal {
         // super.finalization();
-        uint totalMinted = token.totalSupply();
-        if(totalMinted <= FUND_RAISING_TOKENS)
+        if(soldTokens <= FUND_RAISING_TOKENS)
         {
-            uint amount_to_mint = FUND_RAISING_TOKENS.sub(totalMinted);
+            uint amount_to_mint = FUND_RAISING_TOKENS.sub(soldTokens);
             // Deposit = new safeDeposit();
             token.mint (COLD_WALLET,amount_to_mint); // this need to be updated with other logic if smart contract has to be done
         }

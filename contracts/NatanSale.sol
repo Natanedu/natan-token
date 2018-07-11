@@ -182,7 +182,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
     // Finalize function for finalizing the crowdsale
-    function finalize() onlyOwner public {
+    function finalize() public onlyOwner() {
         require(!isFinalized);
         require(hasClosed());
 

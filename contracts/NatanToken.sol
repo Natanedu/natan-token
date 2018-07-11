@@ -53,7 +53,7 @@ contract natanEduToken is  natanEduConstant, MintableToken {
 
     }
 
-    function addExcluded(address _toExclude) onlyOwner() {
+    function addExcluded(address _toExclude) external onlyOwner() {
         excluded[_toExclude] = true;
     }
 

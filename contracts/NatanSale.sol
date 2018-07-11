@@ -136,7 +136,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
      * @dev Admin can move end time.
      * @param _endTime New end time.
      */
-    function setEndTime(uint _endTime) onlyOwner  {
+    function setEndTime(uint _endTime) private onlyOwner  {
         require(_endTime > openingTime);
         closingTime = uint32(_endTime);
     }

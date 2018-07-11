@@ -47,7 +47,7 @@ contract natanEduToken is  natanEduConstant, MintableToken {
         return TOKEN_DECIMALS;
     }
 
-    function crowdsaleFinish() onlyOwner {
+    function crowdsaleFinish() internal onlyOwner() {
         paused = true;
         finishMinting();
     }

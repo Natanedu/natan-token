@@ -160,11 +160,11 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     //     return isFinalized;
     // }
 
-    function getopeningTime() external constant returns (uint ) {
+    function getopeningTime() external view returns (uint ) {
         return openingTime;
     }
 
-    function getEndTime() external constant returns (uint endtime) {
+    function getEndTime() external view returns (uint endtime) {
         return closingTime;
     }
 

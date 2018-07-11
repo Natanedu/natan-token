@@ -92,7 +92,7 @@ contract natanEduToken is  natanEduConstant, MintableToken {
         return true;
     }
     // This function will calculate the amount of token to withdraw from cold wallet each year
-    function withdrawAmount(uint count) internal returns(uint) {
+    function withdrawAmount(uint count) internal view returns(uint) {
 
         if(count == 1){
             return balanceOf(COLD_WALLET).div(3);

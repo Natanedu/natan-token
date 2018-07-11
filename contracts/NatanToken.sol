@@ -20,7 +20,7 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     event CheckMSGSender(address owner);
     event StorageWithDraw(address _to, address _from, uint value);
 
-    constructor() {
+    constructor() public {
         sale_Add = msg.sender;
     }
 

@@ -33,9 +33,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         _;
     }
 
-    constructor(uint _openingTime, uint _endTime, address _wallet)
-            Ownable() {
-        
+    constructor(uint _openingTime, uint _endTime, address _wallet) public Ownable() {
         require(_endTime >= _openingTime);
         require(_openingTime != 0);
         require(_endTime != 0);

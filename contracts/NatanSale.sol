@@ -142,7 +142,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
 
-    function setopeningTime(uint _openingTime) private onlyOwner  {
+    function setOpeningTime(uint _openingTime) private onlyOwner  {
         require(_openingTime < closingTime);
         openingTime = uint32(_openingTime);
     }

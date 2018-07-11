@@ -116,7 +116,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             require(validPurchase(beneficiary, pretokens,  preico));
             token.mint(beneficiary, tokens);
             soldTokens = soldTokens.add(pretokens);
-            TokenPurchase(msg.sender, beneficiary,  pretokens);
+            emit TokenPurchase(msg.sender, beneficiary,  pretokens);
 
         }
         else {

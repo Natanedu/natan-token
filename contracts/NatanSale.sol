@@ -19,7 +19,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     uint public openingTime;
     uint public closingTime;
     bool public isFinalized = false;
-    uint public count = 1;
+    uint public count ;
 
     event TokenPurchase(address indexed purchaser, address indexed beneficiary,  uint amount);
     event Finalized();
@@ -42,6 +42,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         wallet = _wallet;
         openingTime = _openingTime;
         closingTime = _endTime;
+        count = 0;
         token = createTokenContract();
         token.mint(TEAM_ADDRESS, TEAM_TOKENS);
         token.mint(BONUS_ADDRESS, STUD_BONUS_TOKENS);
@@ -105,15 +106,31 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     // low level token purchase function
     function buyTokens(address beneficiary, uint _weiamount) public onlyWhileOpen {
         require(beneficiary != 0x0);
-        // total minted tokens
-        uint totalSupply = token.totalSupply();
-        // calculate token amount to be created
-        uint tokens = _getTokenAmount(_weiamount);
-        // actual token minting rate (with considering bonuses and discounts)
-        require(validPurchase(beneficiary, tokens, totalSupply));
-        soldTokens = soldTokens.add(tokens);
-        token.mint(beneficiary, tokens);
-        TokenPurchase(msg.sender, beneficiary,  tokens);
+        uint rate = getRate();
+        if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER){
+            soldTokens <= PREICO_TOKENS;
+            // total minted tokens
+            uint totalSupply = token.totalSupply();
+            // calculate token amount to be created
+            uint tokens = _getTokenAmount(_weiamount);
+            // actual token minting rate (with considering bonuses and discounts)
+            require(validPurchase(beneficiary, tokens, totalSupply));
+            soldTokens = soldTokens.add(tokens);
+            token.mint(beneficiary, tokens);
+            TokenPurchase(msg.sender, beneficiary,  tokens);
+
+        }
+        else {
+            // total minted tokens
+            uint totalSupply = token.totalSupply();
+            // calculate token amount to be created
+            uint tokens = _getTokenAmount(_weiamount);
+            // actual token minting rate (with considering bonuses and discounts)
+            require(validPurchase(beneficiary, tokens, totalSupply));
+            soldTokens = soldTokens.add(tokens);
+            token.mint(beneficiary, tokens);
+            emit TokenPurchase(msg.sender, beneficiary,  tokens);
+        }
     }
     /**
      * @dev Admin can move end time.
@@ -125,7 +142,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
 
-     function setopeningTime(uint _openingTime) onlyOwner  {
+    function setopeningTime(uint _openingTime) onlyOwner  {
         require(_openingTime < closingTime);
         openingTime = uint32(_openingTime);
     }
@@ -137,7 +154,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
 
     function addExcluded(address _address) public onlyOwner  {
        
-    natanEduToken(token).addExcluded(_address);
+        natanEduToken(token).addExcluded(_address);
     }
     // function isSaleFinished() external returns (bool status){
     //     return isFinalized;
@@ -197,7 +214,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     function withdrawFromStorage() public  returns(bool) {
         require(correctTimeFrame());
         require(count == 1 || count == 2 || count == 3);
-        token.withdrawFromStorage(1);
+        token.withdrawFromStorage(count);
         return true;
     }
 

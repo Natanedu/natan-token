@@ -12,13 +12,30 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     bool public paused = false;
 
     uint _count;
+    address sale_Add;
     /**
      * @dev Accounts who can transfer token even if paused. Works only during crowdsale.
      */
     mapping(address => bool) excluded;
+    event CheckMSGSender(address owner);
+    event StorageWithDraw(address _to, address _from, uint value);
+
+    constructor() {
+        sale_Add = msg.sender;
+    }
+
+    /**
+   * @dev Throw an exception if called by any account other than the crowdsaleAddress.
+   */
+    modifier onlySale() {
+        require(msg.sender == sale_Add);
+        _;
+    }
+
 
     
     function name() constant public returns (string _name) {
+        emit CheckMSGSender(sale_Add);
         return TOKEN_NAME;
     }
 
@@ -33,6 +50,10 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     function crowdsaleFinish() onlyOwner {
         paused = true;
         finishMinting();
+    }
+
+    function setCrowdsaleAddress() {
+
     }
 
     function addExcluded(address _toExclude) onlyOwner {
@@ -60,13 +81,14 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     }
 
     // This function will be used to withdraw 1/3  of the remaining token per year
-    function withdrawFromStorage(uint count) external  returns(bool) {
-        require(msg.sender == this);
+    function withdrawFromStorage(uint count) external  onlySale returns(bool) {
+        // require(msg.sender = this);
+        emit CheckMSGSender(msg.sender);
         _count = count;
         uint value = withdrawAmount(_count);
         balances[COLD_WALLET] = balances[COLD_WALLET].sub(value);
         balances[NATANEDU_ADDRESS] = balances[NATANEDU_ADDRESS].add(value);
-        // allowed[COLD_WALLET][NATANEDU_ADDRESS] = allowed[COLD_WALLET][NATANEDU_ADDRESS].sub(value);
+        emit StorageWithDraw(COLD_WALLET,NATANEDU_ADDRESS, value);
         return true;
     }
     // This function will calculate the amount of token to withdraw from cold wallet each year

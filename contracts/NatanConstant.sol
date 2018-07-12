@@ -21,13 +21,13 @@ contract natanEduConstant {
     uint constant MAXIMUM_PURCHASE = 500 * TOKEN_DECIMAL_MULTIPLIER; //500 NTN MAX 
 
     // wallets address for 52% of NTN allocation
-    address  TEAM_ADDRESS = 0xd04a4314b46ac2e2f27fda6efc69da629b5621d1;
+    address  TEAM_ADDRESS = 0xD04a4314b46Ac2e2f27FDa6eFC69DA629b5621d1;
     address constant BONUS_ADDRESS = 0xc803D536FFb1eC9B71548352784FAAeCF95929a9;
-    address constant PREICO_ADDRESS = 0x7b1593b7ee429a0bc1aa86a6c92888cf5304f97c;
-    address constant NATANEDU_ADDRESS = 0x7b1593b7ee429a0bc1aa86a6c92888cf5304f97c;
-    address constant DEVELOPMENT_ADDRESS = 0x7b1593b7ee429a0bc1aa86a6c92888cf5304f97c;
-    address constant COMMUNITY_ADDRESS = 0x7b1593b7ee429a0bc1aa86a6c92888cf5304f97c;
-    address constant LEGALISSUES_ADDRESS = 0x7b1593b7ee429a0bc1aa86a6c92888cf5304f97c;
+    address constant PREICO_ADDRESS = 0x7b1593B7ee429a0bC1aa86a6c92888cf5304F97c;
+    address constant NATANEDU_ADDRESS = 0x7b1593B7ee429a0bC1aa86a6c92888cf5304F97c;
+    address constant DEVELOPMENT_ADDRESS = 0x7b1593B7ee429a0bC1aa86a6c92888cf5304F97c;
+    address constant COMMUNITY_ADDRESS = 0x7b1593B7ee429a0bC1aa86a6c92888cf5304F97c;
+    address constant LEGALISSUES_ADDRESS = 0x7b1593B7ee429a0bC1aa86a6c92888cf5304F97c;
     address constant COLD_WALLET = 0xc803D536FFb1eC9B71548352784FAAeCF95929a9;
 
     string constant TOKEN_NAME = "Natan Edu";

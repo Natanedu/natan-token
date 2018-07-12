@@ -20,9 +20,6 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     event CheckMSGSender(address owner);
     event StorageWithDraw(address _to, address _from, uint value);
 
-    constructor() {
-        sale_Add = msg.sender;
-    }
 
     /**
    * @dev Throw an exception if called by any account other than the crowdsaleAddress.
@@ -35,7 +32,6 @@ contract natanEduToken is  natanEduConstant, MintableToken {
 
     
     function name() constant public returns (string _name) {
-        emit CheckMSGSender(sale_Add);
         return TOKEN_NAME;
     }
 
@@ -47,13 +43,9 @@ contract natanEduToken is  natanEduConstant, MintableToken {
         return TOKEN_DECIMALS;
     }
 
-    function crowdsaleFinish() onlyOwner {
+    function crowdsaleFinish() external onlyOwner {
         paused = true;
         finishMinting();
-    }
-
-    function setCrowdsaleAddress() {
-
     }
 
     function addExcluded(address _toExclude) onlyOwner {
@@ -75,15 +67,13 @@ contract natanEduToken is  natanEduConstant, MintableToken {
      /**
    * @dev Function to mint tokens
    */
-    function mint(address _to, uint256 _amount) public returns (bool)
+    function mint(address _to, uint256 _amount) public onlyOwner returns (bool)
     {
         super.mint(_to, _amount);
     }
 
     // This function will be used to withdraw 1/3  of the remaining token per year
-    function withdrawFromStorage(uint count) external  onlySale returns(bool) {
-        // require(msg.sender = this);
-        emit CheckMSGSender(msg.sender);
+    function withdrawFromStorage(uint count) external  onlyOwner returns(bool) {
         _count = count;
         uint value = withdrawAmount(_count);
         balances[COLD_WALLET] = balances[COLD_WALLET].sub(value);

@@ -137,16 +137,12 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         closingTime = uint32(_endTime);
     }
 
-
     function setOpeningTime(uint _openingTime) private onlyOwner  {
         require(_openingTime < closingTime);
         openingTime = uint32(_openingTime);
     }
 
-
-
     function addExcluded(address _address) public onlyOwner  {
-       
         natanEduToken(token).addExcluded(_address);
     }
     // function isSaleFinished() external returns (bool status){
@@ -194,12 +190,10 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
     function finalization() internal {
-        // super.finalization();
         if(soldTokens <= FUND_RAISING_TOKENS)
         {
             uint amount_to_mint = FUND_RAISING_TOKENS.sub(soldTokens);
-            // Deposit = new safeDeposit();
-            token.mint (COLD_WALLET,amount_to_mint); // this need to be updated with other logic if smart contract has to be done
+            token.mint (COLD_WALLET,amount_to_mint);
         }
         token.finishMinting();
         natanEduToken(token).crowdsaleFinish();

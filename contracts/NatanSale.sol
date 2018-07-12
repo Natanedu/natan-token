@@ -15,7 +15,6 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     // safeDeposit public Deposit;
     address public wallet;
     uint public soldTokens;
-    uint public hardcap;
     uint public openingTime;
     uint public closingTime;
     bool public isFinalized = false;
@@ -90,7 +89,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         {
             return 1000*TOKEN_DECIMAL_MULTIPLIER;
         }
-        else return 500*TOKEN_DECIMAL_MULTIPLIER;
+        else return 500000*TOKEN_DECIMAL_MULTIPLIER;
     }
 
      /**
@@ -147,10 +146,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         openingTime = uint32(_openingTime);
     }
 
-    // function setHardCap(uint _hardCapTokens) onlyOwner  {
-    //     require(_hardCapTokens * TOKEN_DECIMAL_MULTIPLIER > HARD_CAP_TOKENS);
-    //     HARD_CAP_TOKENS = _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER;
-    // }
+
 
     function addExcluded(address _address) public onlyOwner  {
        
@@ -159,14 +155,6 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     // function isSaleFinished() external returns (bool status){
     //     return isFinalized;
     // }
-
-    function getopeningTime() external view returns (uint ) {
-        return openingTime;
-    }
-
-    function getEndTime() external view returns (uint endtime) {
-        return closingTime;
-    }
 
     function validPurchase(address beneficiary, uint tokenamount, bool preico) internal view returns (bool) {
         require(tokenamount >= MINIMAL_PURCHASE);
@@ -182,6 +170,11 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             bool hardCapNotReached = tokenamount.add(soldTokens) <= FUND_RAISING_TOKENS;
             return hardCapNotReached;
         }
+    }
+
+    // Finish Crowdsale 
+    function crowdsaleFinish() external onlyOwner {
+        token.crowdsaleFinish();
     }
 
     // Finalize function for finalizing the crowdsale

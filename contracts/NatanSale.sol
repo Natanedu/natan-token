@@ -86,7 +86,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         {
             return 1000*TOKEN_DECIMAL_MULTIPLIER;
         }
-        else return 500000*TOKEN_DECIMAL_MULTIPLIER;
+        else return 500*TOKEN_DECIMAL_MULTIPLIER;
     }
 
      /**

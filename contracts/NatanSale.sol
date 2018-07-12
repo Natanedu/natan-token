@@ -25,17 +25,14 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     event Finalized();
 
     /**
-   * @dev Reverts if not in crowdsale time range.
-   */
+    * @dev Reverts if not in crowdsale time range.
+    */
     modifier onlyWhileOpen {
-
         require(block.timestamp >= openingTime && block.timestamp <= closingTime);
         _;
     }
 
-    constructor(uint _openingTime, uint _endTime, address _wallet)
-            Ownable() {
-        
+    constructor(uint _openingTime, uint _endTime, address _wallet) public Ownable() {
         require(_endTime >= _openingTime);
         require(_openingTime != 0);
         require(_endTime != 0);
@@ -118,7 +115,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             require(validPurchase(beneficiary, pretokens,  preico));
             token.mint(beneficiary, tokens);
             soldTokens = soldTokens.add(pretokens);
-            TokenPurchase(msg.sender, beneficiary,  pretokens);
+            emit TokenPurchase(msg.sender, beneficiary,  pretokens);
 
         }
         else {
@@ -135,13 +132,13 @@ contract natanCrowdsale is natanEduConstant, Ownable {
      * @dev Admin can move end time.
      * @param _endTime New end time.
      */
-    function setEndTime(uint _endTime) onlyOwner  {
+    function setEndTime(uint _endTime) private onlyOwner  {
         require(_endTime > openingTime);
         closingTime = uint32(_endTime);
     }
 
 
-    function setopeningTime(uint _openingTime) onlyOwner  {
+    function setOpeningTime(uint _openingTime) private onlyOwner  {
         require(_openingTime < closingTime);
         openingTime = uint32(_openingTime);
     }
@@ -178,7 +175,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
     // Finalize function for finalizing the crowdsale
-    function finalize() onlyOwner public {
+    function finalize() public onlyOwner() {
         require(!isFinalized);
         require(hasClosed());
 

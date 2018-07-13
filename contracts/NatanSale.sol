@@ -208,19 +208,19 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
     function correctTimeFrame() internal returns(bool){
-        if(now >= (openingTime.add(1 years)) && now <= (openingTime.add(2 years)) && count == 0)
+        if(now >= (openingTime.add(365 days)) && now <= (openingTime.add(365*2 days)) && count == 0)
         {
             count = count.add(1);
             return true;
         }
 
-        else if(now >= (openingTime.add(2 years))  &&  now <= (openingTime.add(3 years)) && count == 1)
+        else if(now >= (openingTime.add(365*2 days))  &&  now <= (openingTime.add(365*2+366 days)) && count == 1)
         {
             count = count.add(1);
             return true;
         }
 
-        else if(now >= (openingTime.add(3 years))  &&  now <= (openingTime.add(4 years)) && count == 2)
+        else if(now >= (openingTime.add(365*2+366 days))  &&  now <= (openingTime.add(365*3+366 days)) && count == 2)
         {
             count = count.add(1);
             return true;

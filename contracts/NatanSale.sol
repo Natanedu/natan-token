@@ -112,7 +112,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             
             // calculate token amount to be created
             uint pretokens = _getTokenAmount(_weiamount);
-            require(validPurchase(beneficiary, pretokens,  preico));
+            require(validPurchase(beneficiary, pretokens));
             token.mint(beneficiary, tokens);
             soldTokens = soldTokens.add(pretokens);
             emit TokenPurchase(msg.sender, beneficiary,  pretokens);
@@ -122,7 +122,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             preico = false;
             // calculate token amount to be created
             uint tokens = _getTokenAmount(_weiamount);
-            require(validPurchase(beneficiary, tokens, preico));
+            require(validPurchase(beneficiary, tokens));
             token.mint(beneficiary, tokens);
             soldTokens = soldTokens.add(tokens);
             emit TokenPurchase(msg.sender, beneficiary,  tokens);
@@ -149,7 +149,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     //     return isFinalized;
     // }
 
-    function validPurchase(address beneficiary, uint tokenamount, bool preico) internal view returns (bool) {
+    function validPurchase(address beneficiary, uint tokenamount) internal view returns (bool) {
         require(tokenamount >= MINIMAL_PURCHASE);
         require(tokenamount <= MAXIMUM_PURCHASE);
         uint tokenBalance = token.balanceOf(beneficiary);

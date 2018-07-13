@@ -19,7 +19,7 @@ contract natanEduToken is  natanEduConstant, MintableToken {
     event CheckMSGSender(address owner);
     event StorageWithDraw(address _to, address _from, uint value);
 
-    function name() public view returns (string _name) {
+    function name() public pure returns (string _name) {
         return TOKEN_NAME;
     }
 

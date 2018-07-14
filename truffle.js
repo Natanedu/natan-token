@@ -20,6 +20,11 @@ module.exports = {
       network_id: "*", // Match any network id
       from:"0xd04a4314b46ac2e2f27fda6efc69da629b5621d1" 
     },
+    UnitTest: {
+      host: "127.0.0.1",
+      port: 7545,
+      network_id: "*" //Match any network id
+    },
     rinkeby: {
       host: "192.168.0.104", // Connect to geth on the specified
       port: 8545,

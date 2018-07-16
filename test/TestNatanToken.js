@@ -136,7 +136,7 @@ contract('NatanToken', function(accounts) {
         try {
             await natanToken.transfer(0, 1000, {from: owner});
         } catch (error) {
-            logError(" Tried to transfer to null address and failed");
+            //logError(" Tried to transfer to null address and failed");
             return true;
         }
         throw new Error("I should never see this!");
@@ -146,12 +146,36 @@ contract('NatanToken', function(accounts) {
         try {
             await natanToken.transfer(accounts[8], TEAM_TOKENS+1, {from: owner});
         } catch (error) {
-            logError("Tried to transfer more tokens than available and failed");
+            //logError("Tried to transfer more tokens than available and failed");
             return true;
         }
         throw new Error("I should never see this!")
     });
 
+  });
+
+  describe("Token TransferFrom", async() => {
+      
+    it('should FAIL to transferFrom to null address', async() => {
+        try {
+            await natanToken.transferFrom(preicoAdd,0,100,{from: owner});
+        } catch (error) {
+            //logError("Tried to transferFrom to null address and failed");
+            return true;
+        }
+        throw new Error("I should never see this!")
+    });
+
+    it('should FAIL to transferFrom if _from has not enough balance', async() => {
+        try {
+            await natanToken.transferFrom(preicoAdd,accounts[8],PREICO_TOKENS+1,{from: owner});
+        } catch (error) {
+            //logError("✅   Tried to transferFrom without enough balance and failed");
+            return true;
+        }
+        throw new Error("I should never see this!")
+    });
+  
   });
   
   describe("withdraw the remaining tokens", async () => {
@@ -172,7 +196,7 @@ contract('NatanToken', function(accounts) {
         try {
             await natanToken.withdrawFromStorage(4, {from: owner});
         } catch (error) {
-            logError("Tried to withdraw tokens for another year");
+            //logError("Tried to withdraw tokens for another year");
             return true;
         }
         throw new Error("I should never see this!")

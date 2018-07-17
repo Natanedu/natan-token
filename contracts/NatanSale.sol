@@ -199,7 +199,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         natanEduToken(token).crowdsaleFinish();
     }
 
-    // This function will be used to withdraw 1/3  of the remaining token per year
+    // This function will be used to withdraw 1/3  of the remaining token per 365 days
     function withdrawFromStorage() public  returns(bool) {
         require(correctTimeFrame());
         require(count == 1 || count == 2 || count == 3);
@@ -214,13 +214,13 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             return true;
         }
 
-        else if(now >= (openingTime.add(365*2 days))  &&  now <= (openingTime.add(365*2+366 days)) && count == 1)
+        else if(now >= (openingTime.add(365*2 days))  &&  now <= (openingTime.add(365*3 days)) && count == 1)
         {
             count = count.add(1);
             return true;
         }
 
-        else if(now >= (openingTime.add(365*2+366 days))  &&  now <= (openingTime.add(365*3+366 days)) && count == 2)
+        else if(now >= (openingTime.add(365*3 days))  &&  now <= (openingTime.add(365*4 days)) && count == 2)
         {
             count = count.add(1);
             return true;

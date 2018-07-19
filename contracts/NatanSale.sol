@@ -113,7 +113,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
             // calculate token amount to be created
             uint pretokens = _getTokenAmount(_weiamount);
             require(validPurchase(beneficiary, pretokens));
-            token.mint(beneficiary, tokens);
+            token.mint(beneficiary, pretokens);
             soldTokens = soldTokens.add(pretokens);
             emit TokenPurchase(msg.sender, beneficiary,  pretokens);
 

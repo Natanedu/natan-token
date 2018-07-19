@@ -193,9 +193,8 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         if(soldTokens <= FUND_RAISING_TOKENS)
         {
             uint amount_to_mint = FUND_RAISING_TOKENS.sub(soldTokens);
-            token.mint (COLD_WALLET,amount_to_mint);
+            token.mint(COLD_WALLET,amount_to_mint);
         }
-        token.finishMinting();
         natanEduToken(token).crowdsaleFinish();
     }
 

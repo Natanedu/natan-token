@@ -45,9 +45,10 @@ const mineBlock = function () {
 
 contract('NatanSale', function(accounts) {
 
-  const DECIMALSFACTOR = 1000000000000000000;
-  const openingTime = new Date(1531699200); // 16 july 2018 01:00:00
-  const endingTime = new Date(1563235200);  // 16 july 2019 01:00:00
+  const TOKEN_DECIMALS = 18;
+  const DECIMALSFACTOR = 10 ** TOKEN_DECIMALS;
+  const openingTime = new Date(1531872000); // 18 july 2018 01:00:00
+  const endingTime = new Date(1563408000);  // 18 july 2019 01:00:00
   const MINIMAL_PURCHASE = 100 * DECIMALSFACTOR;
   const MAXIMUM_PURCHASE = 500 * DECIMALSFACTOR;
   let natanSale;
@@ -88,10 +89,35 @@ contract('NatanSale', function(accounts) {
   });
 
   describe("Buy tokens", async () => {
+    let beneficiary;
+    const weiamount = 1;
+    let rate;
+    let tokens;
+
+    before(async () => {
+      beneficiary = accounts[3];
+      natanSale.getRate().then(async (res) => {
+        rate = res.toNumber();
+        tokens = weiamount*rate;
+
+        console.log("       Rate   : " + rate);
+        console.log("       tokens = " + tokens);
+        console.log("       mini   = " + MINIMAL_PURCHASE);
+        console.log("       maxi   = " + MAXIMUM_PURCHASE);
+      });
+    });
+
+    it("buy tokens", async () => {
+      /*let tokenAmount = await natanSale._getTokenAmount(weiamount, {from: beneficiary});
+      console.log("         Amount = " + tokenAmount);
+      console.log(tokenAmount >= MINIMAL_PURCHASE);
+      console.log(tokenAmount <= MAXIMUM_PURCHASE);*/
+      await natanSale.buyTokens(beneficiary, weiamount, {from: beneficiary});
+    });
 
     it("invalid beneficiary should Fail to buy tokens", async () => {
       try {
-        await natanSale.buyTokens(0, 100);
+        await natanSale.buyTokens(0, weiamount, {from: beneficiary});
       } catch (error) {
           //logError(" Beneficiary with address 0x0 tried to buy tokens and failed");
           return true;
@@ -101,7 +127,7 @@ contract('NatanSale', function(accounts) {
     
     it("beneficiary should Fail to buy amout of tokens inferior to the MINIMAL_PURCHASE", async () => {
       try {
-        await natanSale.buyTokens(accounts[2], MINIMAL_PURCHASE-10);
+        await natanSale.buyTokens(beneficiary, 0.001, {from: beneficiary});
       } catch (error) {
         //logError(" Beneficiary tried to buy amount tokens < minimal purchase");
         return true;
@@ -111,21 +137,36 @@ contract('NatanSale', function(accounts) {
 
     it("beneficiary should Fail to buy amout of tokens superior to the MAXIMUM_PURCHASE", async () => {
       try {
-        await natanSale.buyTokens(accounts[2], MAXIMUM_PURCHASE+10);
+        await natanSale.buyTokens(beneficiary, 1, {from: beneficiary});
       } catch (error) {
         //logError(" Beneficiary tried to buy amount tokens > minimal purchase");
         return true;
       }
       throw new Error("I should never see this!");
     });
-
-    it("buy tokens", async () => {
-      await natanSale.buyTokens(accounts[3], MAXIMUM_PURCHASE-20);
-    });
   
   });
 
   describe("Crowdsale", async () => {
+
+    it("should Fail to finish crowdsale before closing time", async () => {
+      try {
+        await natanSale.finalize({from: owner});
+      } catch (error) {
+          //logError(" Tried to withdraw for the second time in the same year and failed");
+          return true;
+      }
+      throw new Error("I should never see this!");
+    });    
+
+  });
+
+  describe("Crowdsale", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 365); // Move forward a year in time
+      await mineBlock();  // workaround for https://github.com/ethereumjs/testrpc/issues/336
+    });
 
     it("should Fail to finish crowdsale from unauthorized source", async () => {
       try {
@@ -137,29 +178,8 @@ contract('NatanSale', function(accounts) {
       throw new Error("I should never see this!");
     });
 
-    it("should Fail to finish crowdsale before closing time", async () => {
-      try {
-        await natanSale.finalize({from: owner});
-      } catch (error) {
-          //logError(" Tried to withdraw for the second time in the same year and failed");
-          return true;
-      }
-      throw new Error("I should never see this!");
-    });
-
-  });
-
-  describe("Crowdsale", async () => {
-
-    before(async () => {
-      await timeTravel(86400 * 365); // Move forward a year in time
-      await mineBlock();  // workaround for https://github.com/ethereumjs/testrpc/issues/336
-    });
-
     it("finish crowdsale", async () => {
       let currentBlock = await web3.eth.getBlock("latest");
-      //console.log("block timestamp " + currentBlock.timestamp);
-      //console.log("closing time " + endingTime.getTime());
       await natanSale.finalize({from: owner});
     });
 

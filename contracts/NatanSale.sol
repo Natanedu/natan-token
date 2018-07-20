@@ -102,8 +102,7 @@ contract natanCrowdsale is natanEduConstant, Ownable {
         return _weiAmount.mul(rate);
     }
 
-
-    // low level token purchase function
+    //low level token purchase function
     function buyTokens(address beneficiary, uint _weiamount) public onlyWhileOpen {
         require(beneficiary != 0x0);
         uint rate = getRate();

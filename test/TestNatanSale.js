@@ -1,4 +1,5 @@
 const NatanSale = artifacts.require("natanCrowdsale");
+const NatanToken = artifacts.require("natanEduToken");
 var BigNumber = require('bignumber.js')
 
 const logTitle = function (title) {
@@ -51,13 +52,18 @@ contract('NatanSale', function(accounts) {
   const endingTime = new Date(1563408000);  // 18 july 2019 01:00:00
   const MINIMAL_PURCHASE = 100 * DECIMALSFACTOR;
   const MAXIMUM_PURCHASE = 500 * DECIMALSFACTOR;
+
   let natanSale;
+  let natanToken;
+  let natanTokenAddress;
   let rate = 0;
 
   before(async() => {
     owner = accounts[0];
     wallet = accounts[1];
     natanSale = await NatanSale.new(openingTime.getTime(), endingTime.getTime(), wallet, {from: owner});
+    natanTokenAddress = await natanSale.token.call();
+    natanToken = await NatanToken.at(natanTokenAddress, {from: owner});
   });
 
   describe("Token Sale Rate", async () => {
@@ -66,8 +72,10 @@ contract('NatanSale', function(accounts) {
       natanSale.getRate().then(res => {
         rate = res.toNumber();
         let now = new Date().getTime();
-        let date = new Date();
-        
+        let date = new Date(openingTime);
+        //console.log("       Rate   : " + rate);
+        //console.log("       Now    : " + now);
+        //console.log("       Date   : " + date.getTime());
         if(now <= date.setDate(openingTime.getDate() + 4)) {
           assert.equal(rate,10000*DECIMALSFACTOR);
         }
@@ -108,11 +116,25 @@ contract('NatanSale', function(accounts) {
     });
 
     it("buy tokens", async () => {
-      /*let tokenAmount = await natanSale._getTokenAmount(weiamount, {from: beneficiary});
-      console.log("         Amount = " + tokenAmount);
-      console.log(tokenAmount >= MINIMAL_PURCHASE);
-      console.log(tokenAmount <= MAXIMUM_PURCHASE);*/
+      //let tokenAmount = await natanSale._getTokenAmount(weiamount, {from: beneficiary});
+      //console.log("       Amount = " + tokenAmount + "( using _getTokenAmount() )");
+      //console.log(tokenAmount >= MINIMAL_PURCHASE);
+      //console.log(tokenAmount <= MAXIMUM_PURCHASE);
       await natanSale.buyTokens(beneficiary, weiamount, {from: beneficiary});
+      natanToken.balanceOf(beneficiary).then((res) => {
+        let balance = res.toNumber();
+        assert.equal(balance,tokens);
+      });
+    });
+
+    it("beneficiary should Fail to have balance more than maximum purchase", async () => {
+      try {
+        await natanSale.buyTokens(beneficiary, weiamount, {from: beneficiary});
+      } catch (error) {
+          //logError(" Beneficiary with address 0x0 tried to buy tokens and failed");
+          return true;
+      }
+      throw new Error("I should never see this!");
     });
 
     it("invalid beneficiary should Fail to buy tokens", async () => {
@@ -144,7 +166,7 @@ contract('NatanSale', function(accounts) {
       }
       throw new Error("I should never see this!");
     });
-  
+ 
   });
 
   describe("Crowdsale", async () => {
@@ -181,6 +203,9 @@ contract('NatanSale', function(accounts) {
     it("finish crowdsale", async () => {
       let currentBlock = await web3.eth.getBlock("latest");
       await natanSale.finalize({from: owner});
+      natanSale.isFinalized.call().then((res) => {
+        assert.equal(res, true);
+      });
     });
 
   });
@@ -188,9 +213,11 @@ contract('NatanSale', function(accounts) {
   describe("Withdraw tokens for the first year", async () => {
 
     it("should withdraw 1/3 of the remaining token for the first year", async () => {
-      //let currentBlock = await web3.eth.getBlock("latest");
-      //console.log(currentBlock.timestamp);
-      await natanSale.withdrawFromStorage({from: owner});
+      let currentBlock = await web3.eth.getBlock("latest");
+      await natanSale.withdrawFromStorage({from: owner}); 
+      natanSale.count.call((res) => {
+        assert.equal(res, 1);
+      });     
     });
 
   });
@@ -223,6 +250,9 @@ contract('NatanSale', function(accounts) {
 
     it("should withdraw 2/3 of the remaining token for the year 2020", async () => {
       await natanSale.withdrawFromStorage({from: owner});
+      natanSale.count.call((res) => {
+        assert.equal(res, 2);
+      });     
     });
 
   });
@@ -255,6 +285,9 @@ contract('NatanSale', function(accounts) {
 
     it("should withdraw 3/3 of the remaining token for the year 2021", async () => {
       let isDone = await natanSale.withdrawFromStorage({from: owner});
+      natanSale.count.call((res) => {
+        assert.equal(res, 3);
+      });     
     });
 
   });

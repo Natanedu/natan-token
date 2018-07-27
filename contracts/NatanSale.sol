@@ -1,183 +1,159 @@
 pragma solidity ^0.4.23;
 
-// import 'openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol';
-
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./NatanConstant.sol";
 import "./NatanToken.sol";
-// import "./safeDeposit.sol";
-
 
 contract natanCrowdsale is natanEduConstant, Ownable {
     using SafeMath for uint256;
-    natanEduToken public token;
-    // safeDeposit public Deposit;
-    address public wallet;
-    uint public soldTokens;
-    uint public openingTime;
-    uint public closingTime;
-    bool public isFinalized = false;
-    uint public count ;
-    bool preico;
 
-    event TokenPurchase(address indexed purchaser, address indexed beneficiary,  uint amount);
-    event Finalized();
+    natanEduToken public token;   
+
+    uint256 public soldTokens;
+    uint256 public openingTime;
+    uint256 public closingTime;
+    bool public isFinalized;
+
+    // boolean to pause/resume pre sale
+    bool public isPaused;
+
+    event TokenAddedColdWallet(address _address, uint256 _tokens);
+    event SalePaused(uint256 time);
+    event SaleResumed(uint256 time);
+    event PreSaleFinished(string reason, uint256 _time);
 
     /**
     * @dev Reverts if not in crowdsale time range.
     */
     modifier onlyWhileOpen {
-        require(block.timestamp >= openingTime && block.timestamp <= closingTime);
+        require(!isFinalized, "Sale is finalized!");
+        require(!isPaused, "Sale is paused!");
+        require(block.timestamp >= openingTime && block.timestamp <= closingTime, "out of sale time");
         _;
     }
 
-    constructor(uint _openingTime, uint _endTime, address _wallet) public Ownable() {
-        require(_endTime >= _openingTime);
-        require(_openingTime != 0);
-        require(_endTime != 0);
-        wallet = _wallet;
+    constructor(uint256 _openingTime, uint256 _endTime) public Ownable() {
+        require(_endTime >= _openingTime, "end time should be greater then start time!");
+        require(_openingTime != 0 && _endTime != 0, "invalid time!");
         openingTime = _openingTime;
         closingTime = _endTime;
-        count = 0;
-        preico = true;
-        token = createTokenContract();
-        token.mint(TEAM_ADDRESS, TEAM_TOKENS);
-        token.mint(BONUS_ADDRESS, STUD_BONUS_TOKENS);
-        token.mint(PREICO_ADDRESS, PREICO_TOKENS);
-        token.mint(NATANEDU_ADDRESS, NATANEDU_FOUNDATION);
-        token.mint(DEVELOPMENT_ADDRESS, DEVELOPMENT_TOKENS);
-        token.mint(COMMUNITY_ADDRESS, COMMUNITY_TOKENS);
-        token.mint(LEGALISSUES_ADDRESS, LEGALISSUES_TOKENS);
-        token.mint(COLD_WALLET, LEGALISSUES_TOKENS);
+        isFinalized = false;
 
-        natanEduToken(token).addExcluded(TEAM_ADDRESS);
-        natanEduToken(token).addExcluded(BONUS_ADDRESS);
-        natanEduToken(token).addExcluded(PREICO_ADDRESS);
-    }
+        // create Token instance
+        token = new natanEduToken();
+        token.transferOwnership(msg.sender);
+        token.setSaleStartTime(openingTime);
 
-    /**
-     * @dev override token creation to integrate with natanEduToken token.
-     */
-    function createTokenContract() internal returns (natanEduToken) {
-        return new natanEduToken();
-    }
-
-    // @return the rate in NTN per 1 ETH according to the time of the tx and the SRN pricing program.
-    // @Override
-    function getRate() public view returns (uint256) {
-        
-        if (now <= (openingTime.add(4 days)) ) 
-        {
-            return 10000*TOKEN_DECIMAL_MULTIPLIER;
-        }
-        
-        else if (now >= (openingTime.add(7 days)) && now <= (openingTime.add(11 days))) 
-        {
-            return 5000*TOKEN_DECIMAL_MULTIPLIER;
-        }
-
-        else if (now >= (openingTime.add(14 days)) && now <= (openingTime.add(17 days))) 
-        {
-            return 3000*TOKEN_DECIMAL_MULTIPLIER;
-        }
-
-        else if (now >= (openingTime.add(32 days)) && now <= (openingTime.add(35 days))) 
-        {
-            return 1000*TOKEN_DECIMAL_MULTIPLIER;
-        }
-        else return 500*TOKEN_DECIMAL_MULTIPLIER;
-    }
-
-     /**
-   * @dev Override to extend the way in which ether is converted to tokens.
-   * @param _weiAmount Value in wei to be converted into tokens
-   * @return Number of tokens that can be purchased with the specified _weiAmount
-   */
-    function _getTokenAmount(uint256 _weiAmount)
-    internal view returns (uint256)
-    {
-        uint rate = getRate();
-        require(rate != 0);
-        return _weiAmount.mul(rate);
+        // mint token for 42% of NTN allocation wallets address 
+        token.mint(TEAM_WALLET, TEAM_TOKENS);
+        token.mint(NATANEDU_FOUNDATION_WALLET, NATANEDU_FOUNDATION);
+        token.mint(RND_WALLET, DEVELOPMENT_TOKENS);
+        token.mint(COMMUNITY_WALLET, COMMUNITY_TOKENS);
+        token.mint(STUDENT_BONUS_WALLET, STUD_BONUS_TOKENS);
+        token.mint(LEGAL_ISSUES_WALLET, LEGALISSUES_TOKENS);
     }
 
     //low level token purchase function
-    function buyTokens(address beneficiary, uint _weiamount) public onlyWhileOpen {
-        require(beneficiary != 0x0);
-        uint rate = getRate();
-        require(rate != 0);
-        if(rate == 10000*TOKEN_DECIMAL_MULTIPLIER && soldTokens < PREICO_TOKENS){
-            
-            // calculate token amount to be created
-            uint pretokens = _getTokenAmount(_weiamount);
-            require(validPurchase(beneficiary, pretokens));
-            token.mint(beneficiary, pretokens);
-            soldTokens = soldTokens.add(pretokens);
-            emit TokenPurchase(msg.sender, beneficiary,  pretokens);
+    function buyTokens(address beneficiary, uint256 _amountInDollar) public onlyOwner onlyWhileOpen {
+        require(beneficiary != 0x0, "invalid address!");
+        uint256 rate = getRate();
+        uint256 tokens = _amountInDollar.mul(10).div(rate);
+        require(isValidPurchase(beneficiary, tokens), "Not a valid purchase!");
+        token.mint(beneficiary, tokens);
+        soldTokens = soldTokens.add(tokens);
 
-        }
-        else {
-            preico = false;
-            // calculate token amount to be created
-            uint tokens = _getTokenAmount(_weiamount);
-            require(validPurchase(beneficiary, tokens));
-            token.mint(beneficiary, tokens);
-            soldTokens = soldTokens.add(tokens);
-            emit TokenPurchase(msg.sender, beneficiary,  tokens);
+        // check if hardcap of pre sale is reached
+        if(soldTokens == PREICO_TOKENS) {
+            emit PreSaleFinished("Hardcap Reached", block.timestamp);
+        } else if(soldTokens == FUND_RAISING_TOKENS) {
+            emit PreSaleFinished("Hardcap Reached", block.timestamp);
         }
     }
+
+    // get rate in dollar multiplied by 10 to support float value for 1 token
+    function getRate() private view returns (uint256) {
+        if (now <= (openingTime.add(4 days))) {
+            return 6; // $0.6
+        } else if (now > openingTime.add(6 days) && now <= openingTime.add(11 days)) {
+            return 7; // $0.7
+        } else if (now > (openingTime.add(14 days)) && now <= (openingTime.add(18 days))) {
+            return 8; // $0.8
+        } else {
+            return 10; // $1
+        }
+    }
+
+    function isPresale() private view returns (bool) {
+        return now <= openingTime.add(18 days);
+    }
+
+    function isValidPurchase(address beneficiary, uint256 tokenamount) private view returns (bool) {
+        require(tokenamount >= MINIMAL_PURCHASE, "Amount is less then min purchase limit!");
+        require(tokenamount <= MAXIMUM_PURCHASE, "Amount is greater then max purchase limit!");
+        require(token.balanceOf(beneficiary).add(tokenamount) <= MAXIMUM_PURCHASE, "Not allowed to purchase more then max limit!");
+        if(isPresale()){
+            require(soldTokens.add(tokenamount) <= PREICO_TOKENS, "Pre Sale hard cap is reached!");
+        } else {
+            require(soldTokens.add(tokenamount) <= FUND_RAISING_TOKENS, "Crowd Sale hard cap is reached!");
+        }
+        return true;
+    }
+
+    // function to change open time 
+    function setOpeningTime(uint256 _openingTime) external onlyOwner  {
+        require(_openingTime < closingTime, "opening time should be smaller then end time!");
+        openingTime = _openingTime;
+    }
+
+    // function to change end time 
+    function setEndTime(uint256 _endTime) external onlyOwner {
+        require(_endTime > openingTime, "end time should be greater then start time!");
+        closingTime = _endTime;
+    }
+
+     /**
+    * @dev external function for contract owner to pause the sale
+    */
+    function pauseSale() external onlyOwner onlyWhileOpen {
+        isPaused = true;
+        emit SalePaused(block.timestamp);
+    }
+
     /**
-     * @dev Admin can move end time.
-     * @param _endTime New end time.
-     */
-    function setEndTime(uint _endTime) private onlyOwner  {
-        require(_endTime > openingTime);
-        closingTime = uint32(_endTime);
+    * @dev external function for contract owner to resume the sale if paused
+    */
+    function resumeSale() external onlyOwner {
+        require(!isFinalized, "Sale is finalized!");
+        require(isPaused, "Sale is already resumed!");
+        require(block.timestamp >= openingTime && block.timestamp <= closingTime, "out of sale time");
+        isPaused = false;
+        emit SaleResumed(block.timestamp);
     }
 
-    function setOpeningTime(uint _openingTime) private onlyOwner  {
-        require(_openingTime < closingTime);
-        openingTime = uint32(_openingTime);
-    }
-
-    function addExcluded(address _address) public onlyOwner  {
-        natanEduToken(token).addExcluded(_address);
-    }
-    // function isSaleFinished() external returns (bool status){
-    //     return isFinalized;
-    // }
-
-    function validPurchase(address beneficiary, uint tokenamount) internal view returns (bool) {
-        require(tokenamount >= MINIMAL_PURCHASE);
-        require(tokenamount <= MAXIMUM_PURCHASE);
-        uint tokenBalance = token.balanceOf(beneficiary);
-        require(tokenBalance.add(tokenamount) <= MAXIMUM_PURCHASE);
-
-        if(preico){
-            bool softCapNotReached = tokenamount.add(soldTokens) <= PREICO_TOKENS;
-            return softCapNotReached;
-        }
-        else{
-            bool hardCapNotReached = tokenamount.add(soldTokens) <= FUND_RAISING_TOKENS;
-            return hardCapNotReached;
-        }
-    }
-
-    // Finish Crowdsale 
-    function crowdsaleFinish() external onlyOwner {
-        token.crowdsaleFinish();
-    }
-
-    // Finalize function for finalizing the crowdsale
-    function finalize() public onlyOwner() {
-        require(!isFinalized);
-        require(hasClosed());
-
-        finalization();
-        emit Finalized();
-
+    // Finish Crowdsale
+    function finishCrowdsale() external onlyOwner {
+        require(!isFinalized, "Already finalized the sale!");
+        token.finishSale();
         isFinalized = true;
+    }
+
+    // function to finalize sale so that remaining token will be transfered to storage wallet
+    function finalizeSale() public onlyOwner {
+        require(!isFinalized, "Already finalized the sale!");
+        require(hasClosed(), "sale is still on!");
+        transferRemainToStorage();
+        isFinalized = true;
+    }
+
+    // function to transfer remaining un sold token to cold wallet afer the sale is finished.
+    function transferRemainToStorage() private {
+        if(soldTokens < FUND_RAISING_TOKENS) {
+            uint256 remainingTokens = FUND_RAISING_TOKENS.sub(soldTokens);
+            token.mint(COLD_WALLET, remainingTokens);
+            emit TokenAddedColdWallet(COLD_WALLET, remainingTokens);
+        }
+        token.finishSale();
     }
 
     /**
@@ -187,45 +163,4 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     function hasClosed() public view returns (bool) {
         return block.timestamp > closingTime;
     }
-
-    function finalization() internal {
-        if(soldTokens <= FUND_RAISING_TOKENS)
-        {
-            uint amount_to_mint = FUND_RAISING_TOKENS.sub(soldTokens);
-            token.mint(COLD_WALLET,amount_to_mint);
-        }
-        natanEduToken(token).crowdsaleFinish();
-    }
-
-    // This function will be used to withdraw 1/3  of the remaining token per 365 days
-    function withdrawFromStorage() public  returns(bool) {
-        require(correctTimeFrame());
-        require(count == 1 || count == 2 || count == 3);
-        token.withdrawFromStorage(count);
-        return true;
-    }
-
-    function correctTimeFrame() internal returns(bool){
-        if(now >= (openingTime.add(365 days)) && now <= (openingTime.add(365*2 days)) && count == 0)
-        {
-            count = count.add(1);
-            return true;
-        }
-
-        else if(now >= (openingTime.add(365*2 days))  &&  now <= (openingTime.add(365*3 days)) && count == 1)
-        {
-            count = count.add(1);
-            return true;
-        }
-
-        else if(now >= (openingTime.add(365*3 days))  &&  now <= (openingTime.add(365*4 days)) && count == 2)
-        {
-            count = count.add(1);
-            return true;
-        }
-
-        else return false;
-        
-    }
-
 }

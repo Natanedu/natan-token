@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
+import "./MintableToken.sol";
 import "./NatanConstant.sol";
 
 contract natanEduToken is natanEduConstant, MintableToken {
@@ -38,6 +38,7 @@ contract natanEduToken is natanEduConstant, MintableToken {
 
     modifier onlyValidOwner {
         require(msg.sender == owner || msg.sender == validOwner);
+        _;
     }
 
     function name() public pure returns (string _name) {

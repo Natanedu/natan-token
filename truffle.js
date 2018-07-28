@@ -18,7 +18,7 @@ module.exports = {
       host: '127.0.0.1',
       port: 8545,
       network_id: "*", // Match any network id
-      from:"0xd04a4314b46ac2e2f27fda6efc69da629b5621d1" 
+      from:"0x952d9267ce3e60223329f05b84d727e2c3b09dc9" 
     },
     UnitTest: {
       host: "127.0.0.1",

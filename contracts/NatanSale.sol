@@ -132,11 +132,11 @@ contract natanCrowdsale is natanEduConstant, Ownable {
     }
 
     // Finish Crowdsale
-    function finishCrowdsale() external onlyOwner {
-        require(!isFinalized, "Already finalized the sale!");
-        token.finishSale();
-        isFinalized = true;
-    }
+    // function finishCrowdsale() external onlyOwner {
+    //     require(!isFinalized, "Already finalized the sale!");
+    //     token.finishSale();
+    //     isFinalized = true;
+    // }
 
     // function to finalize sale so that remaining token will be transfered to storage wallet
     function finalizeSale() public onlyOwner {

@@ -13,6 +13,36 @@ const logError = function (err) {
   console.log("-----------------------------------------");
 }
 
+const timeTravel = function(time){
+    return new Promise((resolve, reject) => {
+      web3.currentProvider.sendAsync({
+        jsonrpc: "2.0",
+        method: "evm_increaseTime",
+        params: [time], //86400 is num seconds in day
+        id: new Date().getSeconds()
+      }, (err, result) => {
+        if(err) {
+          return reject(err);
+        }
+        return resolve(result);
+      });
+    });
+  }
+  
+  const mineBlock = function () {
+    return new Promise((resolve, reject) => {
+      web3.currentProvider.sendAsync({
+        jsonrpc: "2.0",
+        method: "evm_mine",
+        params: [], 
+        id: new Date().getSeconds()
+      }, (err, result) => {
+        if(err){ return reject(err) }
+        return resolve(result)
+      });
+    })
+  }
+
 contract('NatanToken', function(accounts) {
 
   const DECIMALSFACTOR = new BigNumber('10').pow('18');
@@ -20,6 +50,8 @@ contract('NatanToken', function(accounts) {
   const TOKEN_NAME = "Natan Edu";
   const TOKEN_SYMBOL = "NTN";
   const TOKEN_DECIMALS = 18;
+
+  const openingTime = new Date(1531872000); // 18 july 2018 01:00:00
 
   const TEAM_TOKENS =  7600000 * TOKEN_DECIMALS;
   const STUD_BONUS_TOKENS =  4750000 * TOKEN_DECIMALS;
@@ -41,6 +73,7 @@ contract('NatanToken', function(accounts) {
     legalAdd = accounts[6];
     coldAdd = accounts[7];
     natanToken = await NatanToken.new({from: owner});
+    natanToken.setSaleStartTime(openingTime.getTime(), {from: owner});
   });
 
   describe("Token Basic Properties", async () => {
@@ -180,26 +213,139 @@ contract('NatanToken', function(accounts) {
   
   describe("withdraw the remaining tokens", async () => {
 
-    it("withdraw first year tokens", async () => {
-        await natanToken.withdrawFromStorage(1, {from: owner});
-    });
-
-    it("withdraw second year tokens", async () => {
-        await natanToken.withdrawFromStorage(2, {from: owner});
-    });
-
-    it("withdraw third year tokens", async () => {
-        await natanToken.withdrawFromStorage(3, {from: owner});
-    });
-
-    it('should FAIL to withdraw tokens for the forth year', async() => {
+    it("should FAIL to withdraw first year tokens before passing 365 days", async () => {
         try {
-            await natanToken.withdrawFromStorage(4, {from: owner});
+            await natanToken.withdrawFromStorage({from: owner});
         } catch (error) {
-            //logError("Tried to withdraw tokens for another year");
+            //logError(" Tried to withdraw for the second time in the same year and failed");
             return true;
         }
-        throw new Error("I should never see this!")
+        throw new Error("I should never see this!");      
+    });
+
+  });
+
+  describe("Withdraw tokens for the first year", async () => {
+
+    before(async () => {
+        await timeTravel(86400 * 365); // Move forward a year in time
+        await mineBlock();  // workaround for https://github.com/ethereumjs/testrpc/issues/336
+    });
+
+    it("should withdraw 1/3 of the remaining token for the first year", async () => {
+      let currentBlock = await web3.eth.getBlock("latest");
+      await natanToken.withdrawFromStorage({from: owner}); 
+      natanToken.storageWithdrawCount().then((res) => {
+        assert.equal(res.toNumber(), 1);
+      });
+    });
+
+  });
+
+  describe("Try withdraw tokens second time for the first year", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 60); // Move forward 2 month in time
+      await mineBlock();  // workaround for https://github.com/ethereumjs/testrpc/issues/336
+    });
+
+    it("should FAIL to withdraw two times in the year 2019", async () => {
+      try {
+        await natanToken.withdrawFromStorage({from: owner});
+      } catch (error) {
+          //logError(" Tried to withdraw for the second time in the same year and failed");
+          return true;
+      }
+      throw new Error("I should never see this!");
+    });
+
+  });
+
+  describe("Withdraw tokens for the second year", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 305); // Move forward a year in time
+      await mineBlock()
+    });
+
+    it("should withdraw 2/3 of the remaining token for the year 2020", async () => {
+      await natanToken.withdrawFromStorage({from: owner});
+      natanToken.storageWithdrawCount().then((res) => {
+        assert.equal(res.toNumber(), 2);
+      });  
+    });
+
+  });
+
+  describe("Try to withdraw tokens second time for the second year", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 60); // Move forward 2 month in time
+      await mineBlock();  // workaround for https://github.com/ethereumjs/testrpc/issues/336
+    });
+
+    it("should FAIL to withdraw two times in the year 2020", async () => {
+      try {
+        await natanToken.withdrawFromStorage({from: owner});
+      } catch (error) {
+          //logError(" Tried to withdraw for the second time in the same year and failed");
+          return true;
+      }
+      throw new Error("I should never see this!");
+    });
+
+  });
+
+  describe("Withdraw tokens for the third year", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 305); // Move forward a year in time
+      await mineBlock()
+    });
+
+    it("should withdraw 3/3 of the remaining token for the year 2021", async () => {
+      let isDone = await natanToken.withdrawFromStorage({from: owner});
+      natanToken.storageWithdrawCount().then((res) => {
+        assert.equal(res.toNumber(), 3);
+      });
+    });
+
+  });
+
+  describe("Try to withdraw tokens second time for the third year", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 60); // Move forward 2 month in time
+      await mineBlock();  // workaround for https://github.com/ethereumjs/testrpc/issues/336
+    });
+
+    it("should FAIL to withdraw two times in the year 2021", async () => {
+      try {
+        await natanToken.withdrawFromStorage({from: owner});
+      } catch (error) {
+          //logError(" Tried to withdraw for the second time in the same year and failed");
+          return true;
+      }
+      throw new Error("I should never see this!");
+    });
+
+  });
+
+  describe("Try to withdraw tokens for the forth year", async () => {
+
+    before(async () => {
+      await timeTravel(86400 * 305); // Move forward a year in time
+      await mineBlock()
+    });
+
+    it("should FAIL to withdraw in the year 2022", async () => {
+      try {
+        await natanToken.withdrawFromStorage({from: owner});
+      } catch (error) {
+          //logError(" Tried to withdraw for the second time in the same year and failed");
+          return true;
+      }
+      throw new Error("I should never see this!");
     });
 
   });

@@ -164,7 +164,7 @@ contract('NatanSale', function(accounts) {
       throw new Error("I should never see this!");
     });   
 
-    it("should Fail to resume unpaused sale from unauthorized source", async () => {
+    it("should Fail to resume unpaused sale", async () => {
       try {
         await natanSale.resumeSale({from: owner});
       } catch (error) {

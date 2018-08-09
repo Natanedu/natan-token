@@ -66,7 +66,7 @@ contract('NatanSale', function(accounts) {
 
   describe("Buy tokens", async () => {
     let beneficiary;
-    const dollaramount = 150;
+    const dollaramount = 150 * DECIMALSFACTOR;
     let tokensAmount = 0;
     let rate = 0;
 
@@ -112,7 +112,7 @@ contract('NatanSale', function(accounts) {
 
     it("beneficiary should Fail to have balance more than maximum purchase", async () => {
       try {
-        await natanSale.buyTokens(beneficiary, 5000000, {from: owner});
+        await natanSale.buyTokens(beneficiary, 500000000000000000000, {from: owner});
       } catch (error) {
           //logError(" Beneficiary with address 0x0 tried to buy tokens and failed");
           return true;
@@ -142,7 +142,7 @@ contract('NatanSale', function(accounts) {
 
     it("beneficiary should Fail to buy amout of tokens superior to the MAXIMUM_PURCHASE", async () => {
       try {
-        await natanSale.buyTokens(beneficiary, 5000000, {from: owner});
+        await natanSale.buyTokens(beneficiary, 5000000000000000000, {from: owner});
       } catch (error) {
         //logError(" Beneficiary tried to buy amount tokens > minimal purchase");
         return true;

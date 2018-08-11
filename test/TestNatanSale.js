@@ -69,16 +69,13 @@ contract('NatanSale', function(accounts) {
     const dollaramount = 150 * DECIMALSFACTOR;
     let tokensAmount = 0;
     let rate = 0;
+    let now = new Date().getTime();
+    let date = new Date(openingTime);
 
     before(async () => {
       beneficiary = accounts[3];
       console.log("       mini          = " + MINIMAL_PURCHASE);
       console.log("       max           = " + MAXIMUM_PURCHASE);
-    });
-
-    it("buy tokens", async () => {
-      let now = new Date().getTime();
-      let date = new Date(openingTime);
 
       if(now <= date.setDate(openingTime.getDate() + 4)) {
         rate = 6;
@@ -92,11 +89,13 @@ contract('NatanSale', function(accounts) {
       else {
         rate = 10;
       }
-
+      
       tokensAmount = (dollaramount * 10) / rate;
       console.log("       rate          = " + rate);
       console.log("       tokens amount = " + tokensAmount);
+    });
 
+    it("buy tokens", async () => {
       //change isValidPurchase() to public if you want to test this
       /*natanSale.isValidPurchase(beneficiary, tokensAmount).then((res) => {
         console.log(res);

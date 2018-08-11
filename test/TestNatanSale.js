@@ -89,18 +89,13 @@ contract('NatanSale', function(accounts) {
       else {
         rate = 10;
       }
-      
+
       tokensAmount = (dollaramount * 10) / rate;
       console.log("       rate          = " + rate);
       console.log("       tokens amount = " + tokensAmount);
     });
 
-    it("buy tokens", async () => {
-      //change isValidPurchase() to public if you want to test this
-      /*natanSale.isValidPurchase(beneficiary, tokensAmount).then((res) => {
-        console.log(res);
-      });*/
-      
+    it("buy tokens", async () => {      
       await natanSale.buyTokens(beneficiary, dollaramount, {from: owner});
      
       natanToken.balanceOf(beneficiary).then((res) => {
@@ -148,7 +143,7 @@ contract('NatanSale', function(accounts) {
       }
       throw new Error("I should never see this!");
     });
- 
+
   });
 
   describe("Pause/Resume sale", async() => {
@@ -249,5 +244,5 @@ contract('NatanSale', function(accounts) {
     });   
 
   });
-  
+
 });
